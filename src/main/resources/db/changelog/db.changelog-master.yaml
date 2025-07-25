@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - include:
+      file: classpath:/db/changelog/01-cinema_create.sql
+  - include:
+      file: classpath:/db/changelog/02-genre.sql
+  - include:
+      file: classpath:/db/changelog/04-room.sql
+  - include:
+      file: classpath:/db/changelog/05-seat.sql

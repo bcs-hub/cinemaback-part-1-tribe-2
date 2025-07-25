@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_PASSWORD=student123
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=cinema
+
+  frontend:
+    image: itcrafters/cinemafront:extracted-admin
+    pull_policy: always
+    ports:
+      - 80:80

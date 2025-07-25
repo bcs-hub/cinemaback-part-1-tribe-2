@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# List of protected branch patterns
+protected_patterns=("*-solution" "*-start" "*-tests" "master")
+
+# Function to check if the branch name matches any pattern
+branch_matches() {
+    local branch=$1
+    for pattern in "${protected_patterns[@]}"; do
+        if [[ $branch == $pattern ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Get the name of the branch being pushed
+while read local_ref local_sha remote_ref remote_sha; do
+    branch_name=$(echo $remote_ref | sed 's!refs/heads/!!')
+
+    # Check if the branch name matches any of the protected patterns
+    if branch_matches "$branch_name"; then
+        echo "You are not allowed to push directly to the ${branch_name} branch. Please create a pull request."
+        exit 1
+    fi
+done
