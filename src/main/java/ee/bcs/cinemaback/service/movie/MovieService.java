@@ -37,11 +37,13 @@ public class MovieService {
     }
 
     public void addNewMovie(MovieDto movieDto) {
+        Genre selectedGenre = genreRepository.getReferenceById(movieDto.getGenreId());
 
         Movie movie = getAndValidateMovie(movieDto);
         if (movie == null) return;
 
         movie.setStatus(ACTIVE.getLetter());
+        movie.setGenre(selectedGenre);
         movieRepository.save(movie);
     }
 

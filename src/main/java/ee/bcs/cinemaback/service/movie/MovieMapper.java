@@ -21,6 +21,7 @@ public interface MovieMapper {
     Movie toMovie(MovieDto movieDto);
 
     @Mapping(source = "title", target = "title")
+    @Mapping(source = "genre.id", target = "genreId")
     @Mapping(source = "genre.name", target = "genreName")
     @Mapping(source = "youtubeLink", target = "youtubeLink")
     @Mapping(source = "runtime", target = "runtime")
