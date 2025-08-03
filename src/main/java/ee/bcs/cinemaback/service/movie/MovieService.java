@@ -77,15 +77,7 @@ public class MovieService {
     }
 
     public void updateMovie(Integer id, MovieDto movieDto) {
-        Movie movie = movieRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage()));
-
-        if (movieRepository.existsBy(movieDto.getTitle()) && !movie.getTitle().equals(movieDto.getTitle())) {
-            throw new DatabaseNameConflictException(MOVIE_EXISTS.getMessage());
-        }
-
-        movieMapper.updateMovieFromDto(movieDto, movie);
-
+        Movie movie = getUpdatedMovie(id, movieDto);
         movieRepository.save(movie);
     }
 
@@ -100,6 +92,32 @@ public class MovieService {
         movie.setStatus(DELETED.getLetter());
         movieRepository.save(movie);
 
+    }
+
+    private Movie movieExistenceCheck(Integer id, MovieDto movieDto) {
+        Movie movie = movieRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage()));
+
+        if (movieRepository.existsBy(movieDto.getTitle()) && !movie.getTitle().equals(movieDto.getTitle())) {
+            throw new DatabaseNameConflictException(MOVIE_EXISTS.getMessage());
+        }
+        return movie;
+    }
+
+    private Movie getUpdatedMovie(Integer id, MovieDto movieDto) {
+        Movie movie = movieExistenceCheck(id, movieDto);
+
+
+        movieMapper.updateMovieFromDto(movieDto, movie);
+        updateMovieGenre(movieDto, movie);
+
+        return movie;
+    }
+
+    private void updateMovieGenre(MovieDto movieDto, Movie movie) {
+        Genre genre = genreRepository.findById(movieDto.getGenreId()).orElseThrow(
+                () -> new ResourceNotFoundException(GENRE_NOT_FOUND.getMessage()));
+        movie.setGenre(genre);
     }
 
     private Movie getAndValidateMovie(MovieDto movieDto) {
