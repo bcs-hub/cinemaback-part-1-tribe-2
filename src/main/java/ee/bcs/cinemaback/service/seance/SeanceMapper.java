@@ -49,6 +49,7 @@ public interface SeanceMapper {
     SeanceAdminSummary toAdminSummary(Seance seance);
 
     @Mapping(ignore = true, target = "movie.id")
+    @Mapping(ignore = true, target = "room.id")
     @Mapping(source = "language", target = "language")
     @Mapping(source = "subtitles", target = "subtitles")
     @Mapping(source = "dateTime", target = "startTime", qualifiedByName = "dateTimeToInstant")
@@ -56,9 +57,10 @@ public interface SeanceMapper {
 
     @Named("dateTimeToInstant")
     static Instant dateTimeToInstant(String dateTime) {
-        return dateTime == null ? null : LocalDateTime.parse(dateTime, DATE_TIME_FORMATTER)
-                .atZone(TIME_ZONE)
-                .toInstant();
+        return dateTime == null ? null
+                : LocalDateTime.parse(dateTime, DATE_TIME_FORMATTER)
+                        .atZone(TIME_ZONE)
+                        .toInstant();
     }
 
     @Named("instantToDateTime")

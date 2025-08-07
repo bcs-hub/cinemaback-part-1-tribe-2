@@ -23,7 +23,6 @@ import static ee.bcs.cinemaback.infrastructure.Error.*;
 import static ee.bcs.cinemaback.infrastructure.Status.ACTIVE;
 import static ee.bcs.cinemaback.infrastructure.Status.DELETED;
 
-
 @Service
 @RequiredArgsConstructor
 public class SeanceService {
@@ -35,7 +34,6 @@ public class SeanceService {
     private final SeanceMapper seanceMapper;
     private final Clock clock;
 
-
     public List<SeanceScheduleDto> findAllFutureSeances() {
         List<Seance> seances = seanceRepository.findByStartTimeGreaterThan(clock.instant());
         return getSeanceScheduleDtos(seances);
@@ -43,7 +41,7 @@ public class SeanceService {
     }
 
     public List<SeanceScheduleDto> findMovieAllFutureSeances(Integer movieId) {
-        List<Seance> seances =  seanceRepository.findByStartTimeGreaterThanAndMovieId(clock.instant(), movieId);
+        List<Seance> seances = seanceRepository.findByStartTimeGreaterThanAndMovieId(clock.instant(), movieId);
         return getSeanceScheduleDtos(seances);
 
     }
@@ -59,7 +57,6 @@ public class SeanceService {
         seance.setStatus(ACTIVE.getLetter());
         seanceRepository.save(seance);
     }
-
 
     public List<SeanceAdminSummary> getSeanceAdminSummary() {
         List<Seance> seances = seanceRepository.findAllSeancesBy(ACTIVE.getLetter());
@@ -87,7 +84,6 @@ public class SeanceService {
         seanceScheduleDto.setTotalSeats(totalSeats);
         seanceScheduleDto.setAvailableSeats(totalSeats - bookedSeats);
 
-
         return seanceScheduleDto;
     }
 
@@ -99,8 +95,7 @@ public class SeanceService {
 
     public Seance getSeance(Integer id) {
         Seance seance = seanceRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Seance not found")
-        );
+                () -> new ResourceNotFoundException("Seance not found"));
         return seance;
     }
 
@@ -109,7 +104,11 @@ public class SeanceService {
         Seance seance = getSeanceAndValidateChangeable(id);
         seanceMapper.updateSeanceFromDto(seanceAdminDto, seance);
 
-        seance.setMovie(movieRepository.findById(seanceAdminDto.getMovieId()).orElseThrow(() -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage())));
+        seance.setMovie(movieRepository.findById(seanceAdminDto.getMovieId())
+                .orElseThrow(() -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage())));
+
+        seance.setRoom(roomRepository.findById(seanceAdminDto.getRoomId()).orElseThrow(
+                () -> new ResourceNotFoundException(ROOM_NOT_FOUND.getMessage())));
 
         seanceRepository.save(seance);
     }
@@ -123,7 +122,7 @@ public class SeanceService {
     private List<SeanceScheduleDto> getSeanceScheduleDtos(List<Seance> seances) {
         List<SeanceScheduleDto> seanceScheduleDtos = new ArrayList<>();
 
-        for(Seance seance : seances) {
+        for (Seance seance : seances) {
             SeanceScheduleDto seanceScheduleDto = seanceMapper.toScheduleDto(seance);
             int totalSeats = seance.getRoom().getRows() * seance.getRoom().getCols();
             int bookedSeats = ticketRepository.countBySeance(seance.getId());
@@ -142,6 +141,5 @@ public class SeanceService {
         }
         return seance;
     }
-
 
 }
