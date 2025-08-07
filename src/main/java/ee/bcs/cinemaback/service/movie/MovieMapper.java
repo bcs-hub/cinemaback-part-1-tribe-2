@@ -18,6 +18,7 @@ public interface MovieMapper {
     @Mapping(source = "youtubeLink", target = "youtubeLink")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "posterImage", target = "posterImage", qualifiedByName = "imageStringToByteArray")
+    @Mapping(source = "genreId", target = "genre.id")
     Movie toMovie(MovieDto movieDto);
 
     @Mapping(source = "title", target = "title")
@@ -53,7 +54,7 @@ public interface MovieMapper {
     @Mapping(source = "runtime", target = "runtime")
     @Mapping(source = "director", target = "director")
     @Mapping(source = "youtubeLink", target = "youtubeLink")
-    @Mapping(ignore = true, target = "genre.id")
+    @Mapping(source = "genreId", target = "genre.id")
     @Mapping(source = "description", target = "description")
     void updateMovieFromDto(MovieDto movieDto, @MappingTarget Movie movie);
 
