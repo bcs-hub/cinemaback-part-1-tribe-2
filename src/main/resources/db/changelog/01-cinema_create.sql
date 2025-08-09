@@ -1,8 +1,4 @@
--- Created by Vertabelo (http://vertabelo.com)
--- Last amodification date: 2023-05-17 12:13:00.273
 
--- tables
--- Table: genre
 CREATE TABLE genre (
                        id serial  NOT NULL,
                        name varchar(255)  NOT NULL,
