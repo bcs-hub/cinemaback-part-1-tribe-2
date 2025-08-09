@@ -10,8 +10,7 @@ import ee.bcs.cinemaback.persistence.ticket.TicketRepository;
 import ee.bcs.cinemaback.service.seance.dto.SeanceAdminDto;
 import ee.bcs.cinemaback.service.seance.dto.SeanceAdminSummary;
 import ee.bcs.cinemaback.service.seance.dto.SeanceScheduleDto;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -109,7 +108,7 @@ public class SeanceService {
         Seance seance = getSeanceAndValidateChangeable(id);
         seanceMapper.updateSeanceFromDto(seanceAdminDto, seance);
 
-        seance.setRoom(roomRepository.findById(seanceAdminDto.getRoomId()));
+        seance.setRoom(roomRepository.findById(seanceAdminDto.getRoomId()).orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND.getMessage())));
         seance.setMovie(movieRepository.findById(seanceAdminDto.getMovieId()).orElseThrow(() -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage())));
 
         seanceRepository.save(seance);
