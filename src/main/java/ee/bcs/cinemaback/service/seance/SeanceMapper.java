@@ -48,6 +48,7 @@ public interface SeanceMapper {
     @Mapping(source = "id", target = "id")
     SeanceAdminSummary toAdminSummary(Seance seance);
 
+    @Mapping(ignore = true, target = "room.id")
     @Mapping(ignore = true, target = "movie.id")
     @Mapping(source = "language", target = "language")
     @Mapping(source = "subtitles", target = "subtitles")
