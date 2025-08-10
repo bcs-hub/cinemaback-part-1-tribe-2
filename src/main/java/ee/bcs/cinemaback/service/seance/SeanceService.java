@@ -108,6 +108,7 @@ public class SeanceService {
 
         Seance seance = getSeanceAndValidateChangeable(id);
         seanceMapper.updateSeanceFromDto(seanceAdminDto, seance);
+        seance.setRoom(roomRepository.findById(seanceAdminDto.getRoomId()).orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND.getMessage())));
 
         seance.setMovie(movieRepository.findById(seanceAdminDto.getMovieId()).orElseThrow(() -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage())));
 
