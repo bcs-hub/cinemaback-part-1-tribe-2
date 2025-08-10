@@ -13,6 +13,7 @@ import java.util.List;
 public interface MovieMapper {
     @Mapping(source = "id", target = "id")
     @Mapping(source = "title", target = "title")
+    @Mapping(source = "genreId", target = "genre.id") //added
     @Mapping(source = "runtime", target = "runtime")
     @Mapping(source = "director", target = "director")
     @Mapping(source = "youtubeLink", target = "youtubeLink")
@@ -22,6 +23,7 @@ public interface MovieMapper {
 
     @Mapping(source = "title", target = "title")
     @Mapping(source = "genre.name", target = "genreName")
+    @Mapping(source = "genre.id", target = "genreId") // add this to provide the genre id number, otherwise it will show null
     @Mapping(source = "youtubeLink", target = "youtubeLink")
     @Mapping(source = "runtime", target = "runtime")
     @Mapping(source = "director", target = "director")

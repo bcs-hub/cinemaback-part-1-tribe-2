@@ -13,6 +13,7 @@ import ee.bcs.cinemaback.service.movie.dto.MovieDto;
 import ee.bcs.cinemaback.service.movie.dto.MovieListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,6 +77,7 @@ public class MovieService {
         return movieMapper.toMovieDtoList(movies);
     }
 
+    @Transactional
     public void updateMovie(Integer id, MovieDto movieDto) {
         Movie movie = movieRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage()));
@@ -85,6 +87,12 @@ public class MovieService {
         }
 
         movieMapper.updateMovieFromDto(movieDto, movie);
+
+        //Change genre id through its setter
+        if (movieDto.getGenreId() != null) {
+            Genre newGenreId = genreRepository.getReferenceById(movieDto.getGenreId());
+            movie.setGenre(newGenreId);
+        }
 
         movieRepository.save(movie);
     }
