@@ -39,7 +39,8 @@ public class MovieService {
     public void addNewMovie(MovieDto movieDto) {
 
         Movie movie = getAndValidateMovie(movieDto);
-        if (movie == null) return;
+        if (movie == null)
+            return;
 
         Genre genre = genreRepository.findById(movieDto.getGenreId()).orElseThrow(
                 () -> new ResourceNotFoundException(GENRE_NOT_FOUND.getMessage()));
@@ -84,7 +85,7 @@ public class MovieService {
         Movie movie = movieRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage()));
 
-        if (movieRepository.existsBy(movieDto.getTitle()) && !movie.getTitle().equals(movieDto.getTitle())) {
+        if (movieRepository.existsBy(movieDto.getTitle(), movieDto.getDirector()) && !movie.getTitle().equals(movieDto.getTitle())) {
             throw new DatabaseNameConflictException(MOVIE_EXISTS.getMessage());
         }
 
@@ -109,12 +110,12 @@ public class MovieService {
     }
 
     private Movie getAndValidateMovie(MovieDto movieDto) {
-        if (movieRepository.deletedByTitle(movieDto.getTitle())) {
+        if (movieRepository.deletedByTitle(movieDto.getTitle(), movieDto.getDirector())) {
             reactivateMovie(movieDto);
             return null;
         }
 
-        if (movieRepository.existsBy(movieDto.getTitle())) {
+        if (movieRepository.existsBy(movieDto.getTitle(), movieDto.getDirector())) {
             throw new DatabaseNameConflictException(MOVIE_EXISTS.getMessage());
         }
 

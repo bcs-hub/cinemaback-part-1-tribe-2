@@ -6,10 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface MovieRepository extends JpaRepository<Movie, Integer> {
-    @Query("select (count(m) > 0) from Movie m where m.title = ?1")
-    boolean existsBy(String title);
-    @Query("select (count(m) > 0) from Movie m where m.title = ?1 and m.status = 'D'")
-    boolean deletedByTitle(String title);
+    @Query("select (count(m) > 0) from Movie m where m.title = ?1 and m.director = ?2")
+    boolean existsBy(String title, String director);
+    @Query("select (count(m) > 0) from Movie m where m.title = ?1 and m.director = ?2 and m.status = 'D'")
+    boolean deletedByTitle(String title, String director);
 
     @Query("select m from Movie m where m.status = 'A' order by m.title")
     List<Movie> findAllActiveMovies();
