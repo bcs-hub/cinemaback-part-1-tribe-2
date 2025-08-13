@@ -37,11 +37,13 @@ public class MovieService {
     }
 
     public void addNewMovie(MovieDto movieDto) {
+        Genre selectedGenre = genreRepository.getReferenceById(movieDto.getGenreId());
 
         Movie movie = getAndValidateMovie(movieDto);
         if (movie == null) return;
 
         movie.setStatus(ACTIVE.getLetter());
+        movie.setGenre(selectedGenre);
         movieRepository.save(movie);
     }
 
@@ -77,6 +79,7 @@ public class MovieService {
     }
 
     public void updateMovie(Integer id, MovieDto movieDto) {
+        Genre selectedGenre = genreRepository.getReferenceById(movieDto.getGenreId());
         Movie movie = movieRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage()));
 
@@ -85,7 +88,7 @@ public class MovieService {
         }
 
         movieMapper.updateMovieFromDto(movieDto, movie);
-
+        movie.setGenre(selectedGenre);
         movieRepository.save(movie);
     }
 

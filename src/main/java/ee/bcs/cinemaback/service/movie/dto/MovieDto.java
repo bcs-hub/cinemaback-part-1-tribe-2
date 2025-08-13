@@ -20,6 +20,7 @@ public class MovieDto implements Serializable {
     private Integer runtime;
     private String director;
     private String genreName;
+    private Integer genreId;
     private String posterImage;
     private String youtubeLink;
     private String description;
