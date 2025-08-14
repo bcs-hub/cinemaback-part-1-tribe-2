@@ -85,7 +85,7 @@ public class MovieService {
         Movie movie = movieRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage()));
 
-        if (movieRepository.existsBy(movieDto.getTitle(), movieDto.getDirector()) && !movie.getTitle().equals(movieDto.getTitle())) {
+        if (movieRepository.existsBy(movieDto.getTitle(), movieDto.getDirector())) {
             throw new DatabaseNameConflictException(MOVIE_EXISTS.getMessage());
         }
 
