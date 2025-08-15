@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
+import java.time.LocalDateTime;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,7 @@ public class SeanceService {
 
     public void createSeance(SeanceAdminDto seanceAdminDto) {
         Seance seance = seanceMapper.toSeance(seanceAdminDto);
+        compareCurrentAndGivenSeanceDateTime(seanceAdminDto.getDateTime());
 
         seance.setRoom(roomRepository.findById(seanceAdminDto.getRoomId()).orElseThrow(
                 () -> new ResourceNotFoundException(ROOM_NOT_FOUND.getMessage())));
@@ -144,6 +146,13 @@ public class SeanceService {
         Seance seance = getSeanceAndValidateChangeable(id);
         seance.setStatus(DELETED.getLetter());
         seanceRepository.save(seance);
+    }
+
+    private void compareCurrentAndGivenSeanceDateTime(String seanceDateTime) {
+        LocalDateTime givenSeanceDateTime = LocalDateTime.parse(seanceDateTime);
+        if (givenSeanceDateTime.isBefore(LocalDateTime.now())) {
+            throw new DatabaseConstraintException(SEANCE_IN_PAST.getMessage());
+        }
     }
 
     private List<SeanceScheduleDto> getSeanceScheduleDtos(List<Seance> seances) {
