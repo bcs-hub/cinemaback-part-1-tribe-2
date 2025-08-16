@@ -1,6 +1,7 @@
 package ee.bcs.cinemaback.service.seance;
 
 import ee.bcs.cinemaback.infrastructure.exception.DatabaseConstraintException;
+import ee.bcs.cinemaback.infrastructure.exception.DatabaseNameConflictException;
 import ee.bcs.cinemaback.infrastructure.exception.ResourceNotFoundException;
 import ee.bcs.cinemaback.persistence.movie.MovieRepository;
 import ee.bcs.cinemaback.persistence.room.RoomRepository;
@@ -10,8 +11,6 @@ import ee.bcs.cinemaback.persistence.ticket.TicketRepository;
 import ee.bcs.cinemaback.service.seance.dto.SeanceAdminDto;
 import ee.bcs.cinemaback.service.seance.dto.SeanceAdminSummary;
 import ee.bcs.cinemaback.service.seance.dto.SeanceScheduleDto;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +42,7 @@ public class SeanceService {
     }
 
     public List<SeanceScheduleDto> findMovieAllFutureSeances(Integer movieId) {
-        List<Seance> seances =  seanceRepository.findByStartTimeGreaterThanAndMovieId(clock.instant(), movieId);
+        List<Seance> seances = seanceRepository.findByStartTimeGreaterThanAndMovieId(clock.instant(), movieId);
         return getSeanceScheduleDtos(seances);
 
     }
@@ -56,10 +55,23 @@ public class SeanceService {
         seance.setMovie(movieRepository.findById(seanceAdminDto.getMovieId()).orElseThrow(
                 () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage())));
 
+        checkSeancesTimeAndRoom(seance);
+
         seance.setStatus(ACTIVE.getLetter());
         seanceRepository.save(seance);
     }
 
+    private void checkSeancesTimeAndRoom(Seance seance) {
+        List<Seance> activeSeances = seanceRepository.findAllSeancesBy(ACTIVE.getLetter());
+        for (Seance existing : activeSeances) {
+            boolean sameRoom = seanceRepository.existsByRoomId(seance.getRoom().getId());
+            boolean sameStart = existing.getStartTime().equals(seance.getStartTime());
+
+            if (sameRoom && sameStart) {
+                throw new DatabaseNameConflictException(SEANCE_TIME_OVERLAP.getMessage());
+            }
+        }
+    }
 
     public List<SeanceAdminSummary> getSeanceAdminSummary() {
         List<Seance> seances = seanceRepository.findAllSeancesBy(ACTIVE.getLetter());
@@ -124,7 +136,7 @@ public class SeanceService {
     private List<SeanceScheduleDto> getSeanceScheduleDtos(List<Seance> seances) {
         List<SeanceScheduleDto> seanceScheduleDtos = new ArrayList<>();
 
-        for(Seance seance : seances) {
+        for (Seance seance : seances) {
             SeanceScheduleDto seanceScheduleDto = seanceMapper.toScheduleDto(seance);
             int totalSeats = seance.getRoom().getRows() * seance.getRoom().getCols();
             int bookedSeats = ticketRepository.countBySeance(seance.getId());
