@@ -23,4 +23,12 @@ public interface MovieRepository extends JpaRepository<Movie, Integer> {
     @Query("select id from Movie where title = ?1")
     Integer getIdByTitle(String title);
 
+    @Query("select (count(m) > 0) from Movie m where m.title = ?1 and m.director = ?2")
+    boolean existsByTitleAndDirector(String title, String director);
+
+    @Query("select (count(m) > 0) from Movie m where m.title = ?1 and m.director = ?2 and m.status = 'D'")
+    boolean deletedByTitleAndDirector(String title, String director);
+
+    @Query("select id from Movie m where m.title = ?1 and m.director = ?2")
+    Integer getIdByTitleAndDirector(String title, String director);
 }

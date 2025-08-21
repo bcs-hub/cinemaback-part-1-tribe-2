@@ -84,7 +84,7 @@ public class MovieService {
         Movie movie = movieRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage()));
 
-        if (movieRepository.existsBy(movieDto.getTitle()) && !movie.getTitle().equals(movieDto.getTitle())) {
+        if (movieRepository.existsByTitleAndDirector(movieDto.getTitle(), movieDto.getDirector()) && !movie.getTitle().equals(movieDto.getTitle()) || !movie.getDirector().equals(movieDto.getDirector())) {
             throw new DatabaseNameConflictException(MOVIE_EXISTS.getMessage());
         }
 
@@ -109,12 +109,12 @@ public class MovieService {
     }
 
     private Movie getAndValidateMovie(MovieDto movieDto) {
-        if (movieRepository.deletedByTitle(movieDto.getTitle())) {
+        if (movieRepository.deletedByTitleAndDirector(movieDto.getTitle(), movieDto.getDirector())) {
             reactivateMovie(movieDto);
             return null;
         }
 
-        if (movieRepository.existsBy(movieDto.getTitle())) {
+        if (movieRepository.existsByTitleAndDirector(movieDto.getTitle(), movieDto.getDirector())) {
             throw new DatabaseNameConflictException(MOVIE_EXISTS.getMessage());
         }
 
@@ -122,7 +122,7 @@ public class MovieService {
     }
 
     private void reactivateMovie(MovieDto movieDto) {
-        Integer movieId = movieRepository.getIdByTitle(movieDto.getTitle());
+        Integer movieId = movieRepository.getIdByTitleAndDirector(movieDto.getTitle(), movieDto.getDirector());
         Movie movie = movieMapper.toMovie(movieDto);
         movie.setStatus(ACTIVE.getLetter());
         movie.setId(movieId);
