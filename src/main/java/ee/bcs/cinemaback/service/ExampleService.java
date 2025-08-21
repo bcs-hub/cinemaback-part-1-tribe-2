@@ -7,6 +7,6 @@ public class ExampleService {
     }
 
     public static void printToConsole() {
-        System.out.println("Hello cat");
+        System.out.println("Hello world");
     }
 }
