@@ -33,6 +33,11 @@ public class TicketTypeService {
     }
 
     public void addTicketType(TicketTypeDto dto) {
+
+        if (ticketTypeRepository.existsBy(dto.getName())) {
+            throw new DatabaseNameConflictException(TICKET_TYPE_EXISTS.getMessage());
+        }
+
         TicketType ticketType = ticketTypeMapper.toEntity(dto);
         ticketTypeRepository.save(ticketType);
     }
