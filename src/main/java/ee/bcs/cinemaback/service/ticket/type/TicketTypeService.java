@@ -33,7 +33,18 @@ public class TicketTypeService {
     }
 
     public void addTicketType(TicketTypeDto dto) {
+        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+            throw new DatabaseNameConflictException("Ticket type name cannot be empty");
+        }
+        String name = dto.getName().trim();
+
+        // duplikaadi kontroll nime järgi
+        if (ticketTypeRepository.existsByNameCI(name)) {
+            throw new DatabaseNameConflictException("Ticket type already exists");
+        }
+
         TicketType ticketType = ticketTypeMapper.toEntity(dto);
+        ticketType.setName(name);
         ticketTypeRepository.save(ticketType);
     }
 
