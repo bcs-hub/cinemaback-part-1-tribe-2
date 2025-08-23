@@ -1,11 +1,13 @@
 package ee.bcs.cinemaback.service.genre;
 
 import ee.bcs.cinemaback.infrastructure.exception.DatabaseConstraintException;
+import ee.bcs.cinemaback.infrastructure.exception.DatabaseNameConflictException;
 import ee.bcs.cinemaback.infrastructure.exception.ResourceNotFoundException;
 import ee.bcs.cinemaback.persistence.genre.Genre;
 import ee.bcs.cinemaback.persistence.genre.GenreRepository;
 import ee.bcs.cinemaback.persistence.movie.MovieRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,10 +29,15 @@ public class GenreService {
 
     public void addGenre(String genreName) {
 
-        validateGenre(genreName);
+        String name = validateGenre(genreName);
         Genre genre = new Genre();
-        genre.setName(genreName);
-        genreRepository.save(genre);
+        genre.setName(name);
+        try {
+            genreRepository.save(genre);
+        } catch (DataIntegrityViolationException e) {
+
+            throw new DatabaseNameConflictException("Genre already exists");
+        }
     }
 
 
@@ -65,9 +72,17 @@ public class GenreService {
         return genre.getName();
     }
 
-    void validateGenre(String genreName) {
-        if (genreName == null || genreName.isEmpty()) {
+    String validateGenre(String genreName) {
+        if (genreName == null) {
             throw new DatabaseConstraintException(DATABASE_NAME_MUST_NOT_BE_EMPTY.getMessage());
         }
+        String name = genreName.strip();
+        if (name.isEmpty()) {
+            throw new DatabaseConstraintException(DATABASE_NAME_MUST_NOT_BE_EMPTY.getMessage());
+        }
+        if (genreRepository.existsByName(name)) {
+            throw new DatabaseNameConflictException("Genre already exists");
+        }
+        return name;
     }
 }

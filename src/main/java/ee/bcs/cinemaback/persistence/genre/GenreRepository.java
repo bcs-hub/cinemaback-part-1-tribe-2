@@ -12,4 +12,5 @@ public interface GenreRepository extends JpaRepository<Genre, Integer> {
     @Query("select g from Genre g order by g.name")
     List<Genre> findAllAlphabetic();
 
+    boolean existsByName(String name);
 }
