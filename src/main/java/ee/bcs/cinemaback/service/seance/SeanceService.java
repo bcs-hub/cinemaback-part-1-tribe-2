@@ -1,6 +1,7 @@
 package ee.bcs.cinemaback.service.seance;
 
 import ee.bcs.cinemaback.infrastructure.exception.DatabaseConstraintException;
+import ee.bcs.cinemaback.infrastructure.exception.DatabaseNameConflictException;
 import ee.bcs.cinemaback.infrastructure.exception.ResourceNotFoundException;
 import ee.bcs.cinemaback.persistence.movie.MovieRepository;
 import ee.bcs.cinemaback.persistence.room.RoomRepository;
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
