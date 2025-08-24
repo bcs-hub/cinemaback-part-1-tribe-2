@@ -41,6 +41,10 @@ public class MovieService {
         Movie movie = getAndValidateMovie(movieDto);
         if (movie == null) return;
 
+        Genre genre = genreRepository.findById(movieDto.getGenreId()).orElseThrow(
+                () -> new ResourceNotFoundException(GENRE_NOT_FOUND.getMessage()));
+
+        movie.setGenre(genre);
         movie.setStatus(ACTIVE.getLetter());
         movieRepository.save(movie);
     }
@@ -85,6 +89,8 @@ public class MovieService {
         }
 
         movieMapper.updateMovieFromDto(movieDto, movie);
+        movie.setGenre(genreRepository.findById(movieDto.getGenreId()).orElseThrow(
+                () -> new ResourceNotFoundException(GENRE_NOT_FOUND.getMessage())));
 
         movieRepository.save(movie);
     }

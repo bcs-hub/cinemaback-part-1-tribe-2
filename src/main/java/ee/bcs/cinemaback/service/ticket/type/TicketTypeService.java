@@ -26,13 +26,16 @@ public class TicketTypeService {
     }
 
     public void deleteTicketType(int id) {
-        if(ticketRepository.existsByTicketTypeId(id)) {
+        if (ticketRepository.existsByTicketTypeId(id)) {
             throw new DatabaseConstraintException(TICKETS_EXIST_WITH_THIS_TICKET_TYPE.getMessage());
         }
         ticketTypeRepository.deleteById(id);
     }
 
     public void addTicketType(TicketTypeDto dto) {
+        if (ticketTypeRepository.existsBy(dto.getName())) {
+            throw new DatabaseNameConflictException(TICKET_TYPE_EXISTS.getMessage());
+        }
         TicketType ticketType = ticketTypeMapper.toEntity(dto);
         ticketTypeRepository.save(ticketType);
     }
@@ -40,8 +43,7 @@ public class TicketTypeService {
     public void updateTicketType(Integer id, TicketTypeDto dto) {
 
         TicketType ticketType = ticketTypeRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(TICKET_TYPE_NOT_FOUND.getMessage())
-        );
+                () -> new ResourceNotFoundException(TICKET_TYPE_NOT_FOUND.getMessage()));
 
         if (ticketTypeRepository.existsBy(dto.getName()) && !ticketType.getName().equals(dto.getName())) {
             throw new DatabaseNameConflictException(TICKET_TYPE_EXISTS.getMessage());
