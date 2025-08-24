@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,6 +56,11 @@ public class SeanceService {
                 () -> new ResourceNotFoundException(ROOM_NOT_FOUND.getMessage())));
         seance.setMovie(movieRepository.findById(seanceAdminDto.getMovieId()).orElseThrow(
                 () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage())));
+
+        // Normalizing to minutes
+        var starTime seance.getStartTime().truncatedTo(ChronoUnit.MINUTES);
+
+
 
         seance.setStatus(ACTIVE.getLetter());
         seanceRepository.save(seance);
