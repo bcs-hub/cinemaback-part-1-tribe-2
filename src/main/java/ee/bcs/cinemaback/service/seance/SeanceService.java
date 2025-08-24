@@ -1,6 +1,7 @@
 package ee.bcs.cinemaback.service.seance;
 
 import ee.bcs.cinemaback.infrastructure.exception.DatabaseConstraintException;
+import ee.bcs.cinemaback.infrastructure.exception.DatabaseNameConflictException;
 import ee.bcs.cinemaback.infrastructure.exception.ResourceNotFoundException;
 import ee.bcs.cinemaback.persistence.movie.MovieRepository;
 import ee.bcs.cinemaback.persistence.room.RoomRepository;
@@ -13,6 +14,7 @@ import ee.bcs.cinemaback.service.seance.dto.SeanceScheduleDto;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -60,10 +62,19 @@ public class SeanceService {
         // Normalizing to minutes
         var starTime seance.getStartTime().truncatedTo(ChronoUnit.MINUTES);
 
+        if(seanceRepository.existsByRoom_IdAndStartTimeAndStatus(Integer starTime.getRoom().getId(),starTime,ACTIVE.getLetter()){
+            throw new DatabaseNameConflictException("Seance in the same room at this time already exists")
+        }
 
-
+        seance.setStartTime(starTime);
         seance.setStatus(ACTIVE.getLetter());
-        seanceRepository.save(seance);
+
+        try {
+            seanceRepository.save(seance);
+        } catch (DataIntegrityViolationException e) {
+            throw new DatabaseNameConflictException(
+                    "Seance in the same room at this time already exists");
+        }
     }
 
 
