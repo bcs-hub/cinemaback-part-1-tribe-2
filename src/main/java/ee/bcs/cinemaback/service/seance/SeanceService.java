@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,11 +64,23 @@ public class SeanceService {
 
     private void checkSeancesTimeAndRoom(Seance seance) {
         List<Seance> activeSeances = seanceRepository.findAllSeancesBy(ACTIVE.getLetter());
-        for (Seance existing : activeSeances) {
-            boolean sameRoom = seanceRepository.existsByRoomId(seance.getRoom().getId());
-            boolean sameStart = existing.getStartTime().equals(seance.getStartTime());
 
-            if (sameRoom && sameStart) {
+        Instant newSeanceStart = seance.getStartTime();
+        int newSeanceRuntimeMinutes = seance.getMovie().getRuntime();
+        int cleanUpTimeMinutes = 20;
+        Instant newSeanceEnd = newSeanceStart.plusSeconds(
+                (long) (newSeanceRuntimeMinutes + cleanUpTimeMinutes) * 60);
+
+        for (Seance existing : activeSeances) {
+            Instant existingSeanceStartTime = existing.getStartTime();
+            int existingSeanceRuntimeMinutes = existing.getMovie().getRuntime();
+            Instant existingSeanceEndTime = existingSeanceStartTime.plusSeconds(
+                    (long) (existingSeanceRuntimeMinutes + cleanUpTimeMinutes) * 60);
+
+            boolean sameRoom = seanceRepository.existsByRoomId(seance.getRoom().getId());
+            boolean overlaps = newSeanceStart.isBefore(existingSeanceEndTime) && newSeanceEnd.isAfter(existingSeanceStartTime);
+
+            if (sameRoom && overlaps) {
                 throw new DatabaseNameConflictException(SEANCE_TIME_OVERLAP.getMessage());
             }
         }
