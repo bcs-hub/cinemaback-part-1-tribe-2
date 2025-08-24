@@ -79,7 +79,7 @@ public class SeanceService {
             Instant existingSeanceEndTime = existingSeanceStartTime.plusSeconds(
                     (long) (existingSeanceRuntimeMinutes + cleanUpTimeMinutes) * 60);
 
-            boolean sameRoom = seanceRepository.existsByRoomId(seance.getRoom().getId());
+            boolean sameRoom = existing.getRoom().getId().equals(seance.getRoom().getId());
             boolean overlaps = newSeanceStart.isBefore(existingSeanceEndTime) && newSeanceEnd.isAfter(existingSeanceStartTime);
 
             if (sameRoom && overlaps) {
