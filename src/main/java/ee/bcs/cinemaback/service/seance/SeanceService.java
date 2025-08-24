@@ -60,13 +60,13 @@ public class SeanceService {
                 () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage())));
 
         // Normalizing to minutes
-        var starTime = seance.getStartTime().truncatedTo(ChronoUnit.MINUTES);
+        var normalizedStarTime = seance.getStartTime().truncatedTo(ChronoUnit.MINUTES);
 
-        if(seanceRepository.existsByRoomIdAndStartTimeAndStatus(seance.getRoom().getId(),starTime,ACTIVE.getLetter())){
+        if(seanceRepository.existsByRoomIdAndStartTimeAndStatus(seance.getRoom().getId(),normalizedStarTime,ACTIVE.getLetter())){
             throw new DatabaseNameConflictException("Seance in the same room at this time already exists");
         }
 
-        seance.setStartTime(starTime);
+        seance.setStartTime(normalizedStarTime);
         seance.setStatus(ACTIVE.getLetter());
 
         try {
