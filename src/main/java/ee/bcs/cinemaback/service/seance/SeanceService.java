@@ -1,6 +1,7 @@
 package ee.bcs.cinemaback.service.seance;
 
 import ee.bcs.cinemaback.infrastructure.exception.DatabaseConstraintException;
+import ee.bcs.cinemaback.infrastructure.exception.DatabaseNameConflictException;
 import ee.bcs.cinemaback.infrastructure.exception.ResourceNotFoundException;
 import ee.bcs.cinemaback.persistence.movie.MovieRepository;
 import ee.bcs.cinemaback.persistence.room.RoomRepository;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,14 +52,40 @@ public class SeanceService {
     public void createSeance(SeanceAdminDto seanceAdminDto) {
         Seance seance = seanceMapper.toSeance(seanceAdminDto);
         compareCurrentAndGivenSeanceDateTime(seanceAdminDto.getDateTime());
-        
+
         seance.setRoom(roomRepository.findById(seanceAdminDto.getRoomId()).orElseThrow(
                 () -> new ResourceNotFoundException(ROOM_NOT_FOUND.getMessage())));
         seance.setMovie(movieRepository.findById(seanceAdminDto.getMovieId()).orElseThrow(
                 () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage())));
 
+        checkSeancesTimeAndRoom(seance);
+
         seance.setStatus(ACTIVE.getLetter());
         seanceRepository.save(seance);
+    }
+
+    private void checkSeancesTimeAndRoom(Seance seance) {
+        List<Seance> activeSeances = seanceRepository.findAllSeancesBy(ACTIVE.getLetter());
+
+        Instant newSeanceStart = seance.getStartTime();
+        int newSeanceRuntimeMinutes = seance.getMovie().getRuntime();
+        int cleanUpTimeMinutes = 20;
+        Instant newSeanceEnd = newSeanceStart.plusSeconds(
+                (long) (newSeanceRuntimeMinutes + cleanUpTimeMinutes) * 60);
+
+        for (Seance existing : activeSeances) {
+            Instant existingSeanceStartTime = existing.getStartTime();
+            int existingSeanceRuntimeMinutes = existing.getMovie().getRuntime();
+            Instant existingSeanceEndTime = existingSeanceStartTime.plusSeconds(
+                    (long) (existingSeanceRuntimeMinutes + cleanUpTimeMinutes) * 60);
+
+            boolean sameRoom = existing.getRoom().getId().equals(seance.getRoom().getId());
+            boolean overlaps = newSeanceStart.isBefore(existingSeanceEndTime) && newSeanceEnd.isAfter(existingSeanceStartTime);
+
+            if (sameRoom && overlaps) {
+                throw new DatabaseNameConflictException(SEANCE_TIME_OVERLAP.getMessage());
+            }
+        }
     }
 
     public List<SeanceAdminSummary> getSeanceAdminSummary() {

@@ -32,6 +32,7 @@ public enum Error {
 
     SEANCE_IN_PAST("Seance dateTime is before current dateTime"),
     SEANCE_EXISTS("Seance already exists"),
+    SEANCE_TIME_OVERLAP("Seance in the same room at this time already exists"),
     SEANCE_HAS_ACTIVE_TICKETS("Seance has active tickets"),
     SEANCE_NOT_FOUND("Seance not found"),
     SEAT_EXISTS("Seat already exists"),
