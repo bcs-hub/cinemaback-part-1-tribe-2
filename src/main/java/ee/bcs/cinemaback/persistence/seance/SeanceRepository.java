@@ -22,6 +22,6 @@ public interface SeanceRepository extends JpaRepository<Seance, Integer> {
     @Query("select s from Seance s where s.startTime >= ?1 and s.movie.id = ?2 and s.status='A' order by s.startTime")
     List<Seance> findByStartTimeGreaterThanAndMovieId(Instant startTime, Integer id);
 
-    boolean existsByRoom_IdAndStartTimeAndStatus(Integer id, Instant startTime, String status);
+    boolean existsByRoomIdAndStartTimeAndStatus(Integer id, Instant startTime, String status);
 
 }

@@ -62,7 +62,7 @@ public class SeanceService {
         // Normalizing to minutes
         var starTime = seance.getStartTime().truncatedTo(ChronoUnit.MINUTES);
 
-        if(seanceRepository.existsByRoom_IdAndStartTimeAndStatus(seance.getRoom().getId(),starTime,ACTIVE.getLetter())){
+        if(seanceRepository.existsByRoomIdAndStartTimeAndStatus(seance.getRoom().getId(),starTime,ACTIVE.getLetter())){
             throw new DatabaseNameConflictException("Seance in the same room at this time already exists");
         }
 
