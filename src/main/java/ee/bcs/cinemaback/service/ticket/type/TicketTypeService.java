@@ -33,6 +33,7 @@ public class TicketTypeService {
     }
 
     public void addTicketType(TicketTypeDto dto) {
+        validate(dto);
         TicketType ticketType = ticketTypeMapper.toEntity(dto);
         ticketTypeRepository.save(ticketType);
     }
@@ -51,5 +52,11 @@ public class TicketTypeService {
         ticketType.setPrice(dto.getPrice());
         ticketTypeRepository.save(ticketType);
 
+    }
+
+    private void validate(TicketTypeDto dto) {
+        if (ticketTypeRepository.existsBy(dto.getName())) {
+            throw new DatabaseNameConflictException(TICKET_TYPE_EXISTS.getMessage());
+        }
     }
 }

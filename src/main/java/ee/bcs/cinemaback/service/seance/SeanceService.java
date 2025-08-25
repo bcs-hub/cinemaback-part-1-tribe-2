@@ -1,8 +1,11 @@
 package ee.bcs.cinemaback.service.seance;
 
 import ee.bcs.cinemaback.infrastructure.exception.DatabaseConstraintException;
+import ee.bcs.cinemaback.infrastructure.exception.DatabaseNameConflictException;
 import ee.bcs.cinemaback.infrastructure.exception.ResourceNotFoundException;
+import ee.bcs.cinemaback.persistence.movie.Movie;
 import ee.bcs.cinemaback.persistence.movie.MovieRepository;
+import ee.bcs.cinemaback.persistence.room.Room;
 import ee.bcs.cinemaback.persistence.room.RoomRepository;
 import ee.bcs.cinemaback.persistence.seance.Seance;
 import ee.bcs.cinemaback.persistence.seance.SeanceRepository;
@@ -10,18 +13,18 @@ import ee.bcs.cinemaback.persistence.ticket.TicketRepository;
 import ee.bcs.cinemaback.service.seance.dto.SeanceAdminDto;
 import ee.bcs.cinemaback.service.seance.dto.SeanceAdminSummary;
 import ee.bcs.cinemaback.service.seance.dto.SeanceScheduleDto;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 import static ee.bcs.cinemaback.infrastructure.Error.*;
 import static ee.bcs.cinemaback.infrastructure.Status.ACTIVE;
 import static ee.bcs.cinemaback.infrastructure.Status.DELETED;
+import static ee.bcs.cinemaback.service.seance.SeanceMapper.dateTimeToInstant;
 
 
 @Service
@@ -43,23 +46,25 @@ public class SeanceService {
     }
 
     public List<SeanceScheduleDto> findMovieAllFutureSeances(Integer movieId) {
-        List<Seance> seances =  seanceRepository.findByStartTimeGreaterThanAndMovieId(clock.instant(), movieId);
+        List<Seance> seances = seanceRepository.findByStartTimeGreaterThanAndMovieId(clock.instant(), movieId);
         return getSeanceScheduleDtos(seances);
 
     }
 
     public void createSeance(SeanceAdminDto seanceAdminDto) {
+        Room room = roomRepository.findById(seanceAdminDto.getRoomId()).orElseThrow(
+                () -> new ResourceNotFoundException(ROOM_NOT_FOUND.getMessage()));
+        Movie movie = movieRepository.findById(seanceAdminDto.getMovieId()).orElseThrow(
+                () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage()));
+
+        validate(seanceAdminDto);
+
         Seance seance = seanceMapper.toSeance(seanceAdminDto);
-
-        seance.setRoom(roomRepository.findById(seanceAdminDto.getRoomId()).orElseThrow(
-                () -> new ResourceNotFoundException(ROOM_NOT_FOUND.getMessage())));
-        seance.setMovie(movieRepository.findById(seanceAdminDto.getMovieId()).orElseThrow(
-                () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage())));
-
+        seance.setRoom(room);
+        seance.setMovie(movie);
         seance.setStatus(ACTIVE.getLetter());
         seanceRepository.save(seance);
     }
-
 
     public List<SeanceAdminSummary> getSeanceAdminSummary() {
         List<Seance> seances = seanceRepository.findAllSeancesBy(ACTIVE.getLetter());
@@ -121,10 +126,22 @@ public class SeanceService {
         seanceRepository.save(seance);
     }
 
+    private void validate(SeanceAdminDto seanceAdminDto) {
+        Instant startTime = dateTimeToInstant(seanceAdminDto.getDateTime());
+        if (startTime.isBefore(Instant.now())) {
+            throw new DatabaseConstraintException(SEANCE_IN_PAST.getMessage());
+        }
+
+        if (seanceRepository.existsByRoomIdAndStartTime(seanceAdminDto.getRoomId(),
+                startTime)) {
+            throw new DatabaseNameConflictException(SEANCE_EXISTS.getMessage());
+        }
+    }
+
     private List<SeanceScheduleDto> getSeanceScheduleDtos(List<Seance> seances) {
         List<SeanceScheduleDto> seanceScheduleDtos = new ArrayList<>();
 
-        for(Seance seance : seances) {
+        for (Seance seance : seances) {
             SeanceScheduleDto seanceScheduleDto = seanceMapper.toScheduleDto(seance);
             int totalSeats = seance.getRoom().getRows() * seance.getRoom().getCols();
             int bookedSeats = ticketRepository.countBySeance(seance.getId());

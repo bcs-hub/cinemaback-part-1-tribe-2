@@ -1,6 +1,7 @@
 package ee.bcs.cinemaback.service.genre;
 
 import ee.bcs.cinemaback.infrastructure.exception.DatabaseConstraintException;
+import ee.bcs.cinemaback.infrastructure.exception.DatabaseNameConflictException;
 import ee.bcs.cinemaback.infrastructure.exception.ResourceNotFoundException;
 import ee.bcs.cinemaback.persistence.genre.Genre;
 import ee.bcs.cinemaback.persistence.genre.GenreRepository;
@@ -65,9 +66,9 @@ public class GenreService {
         return genre.getName();
     }
 
-    void validateGenre(String genreName) {
+    private void validateGenre(String genreName) {
         if (genreName == null || genreName.isEmpty()) {
-            throw new DatabaseConstraintException(DATABASE_NAME_MUST_NOT_BE_EMPTY.getMessage());
+            throw new DatabaseNameConflictException(DATABASE_NAME_MUST_NOT_BE_EMPTY.getMessage());
         }
     }
 }

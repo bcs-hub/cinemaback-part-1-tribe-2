@@ -30,7 +30,8 @@ public enum Error {
     ROOM_NOT_FOUND("Room not found"),
     ROOM_SEATS_CANNOT_BE_EDITED("Room seats cannot be edited because it has seances"),
 
-    SEANCE_EXISTS("Seance already exists"),
+    SEANCE_IN_PAST("Seance dateTime is before current dateTime"),
+    SEANCE_EXISTS("Seance in the same room at this time already exists"),
     SEANCE_HAS_ACTIVE_TICKETS("Seance has active tickets"),
     SEANCE_NOT_FOUND("Seance not found"),
     SEAT_EXISTS("Seat already exists"),

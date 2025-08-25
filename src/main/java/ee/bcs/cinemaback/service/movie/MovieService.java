@@ -13,9 +13,12 @@ import ee.bcs.cinemaback.service.movie.dto.MovieDto;
 import ee.bcs.cinemaback.service.movie.dto.MovieListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static ee.bcs.cinemaback.infrastructure.Error.*;
 import static ee.bcs.cinemaback.infrastructure.Status.ACTIVE;
@@ -81,10 +84,12 @@ public class MovieService {
     }
 
     public void updateMovie(Integer id, MovieDto movieDto) {
+        validateYoutubeLink(movieDto);
         Movie movie = movieRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(MOVIE_NOT_FOUND.getMessage()));
 
-        if (movieRepository.existsBy(movieDto.getTitle()) && !movie.getTitle().equals(movieDto.getTitle())) {
+        if (movieRepository.existsByTitleAndDirector(movieDto.getTitle(), movieDto.getDirector())
+                && !movie.getTitle().equals(movieDto.getTitle())) {
             throw new DatabaseNameConflictException(MOVIE_EXISTS.getMessage());
         }
 
@@ -108,13 +113,27 @@ public class MovieService {
 
     }
 
+    boolean validateYoutubeLink(MovieDto movieDto) {
+        if (StringUtils.hasText(movieDto.getYoutubeLink())) {
+            Pattern pattern = Pattern.compile("^(https://www.youtube.com/embed/)([a-zA-Z0-9_-]{11})$", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(movieDto.getYoutubeLink());
+            boolean matchFound = matcher.find();
+            if (!matchFound) {
+                throw new DatabaseConstraintException("Youtube link is not in correct format, format is https://www.youtube.com/embed/xxxxxxxxxxx");
+            }
+        }
+        return true;
+    }
+
     private Movie getAndValidateMovie(MovieDto movieDto) {
+        validateYoutubeLink(movieDto);
+
         if (movieRepository.deletedByTitle(movieDto.getTitle())) {
             reactivateMovie(movieDto);
             return null;
         }
 
-        if (movieRepository.existsBy(movieDto.getTitle())) {
+        if (movieRepository.existsByTitleAndDirector(movieDto.getTitle(), movieDto.getDirector())) {
             throw new DatabaseNameConflictException(MOVIE_EXISTS.getMessage());
         }
 

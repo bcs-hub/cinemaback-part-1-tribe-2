@@ -7,6 +7,9 @@ import java.time.Instant;
 import java.util.List;
 
 public interface SeanceRepository extends JpaRepository<Seance, Integer> {
+    @Query("select (count(s) > 0) from Seance s where s.room.id = ?1 AND s.startTime = ?2")
+    boolean existsByRoomIdAndStartTime(Integer id, Instant startTime);
+
     @Query("select s from Seance s where s.startTime > ?1 and s.status = 'A' order by s.startTime")
     List<Seance> findByStartTimeGreaterThan(Instant startTime);
 
