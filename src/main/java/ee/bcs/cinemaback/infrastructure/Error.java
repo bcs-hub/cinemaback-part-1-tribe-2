@@ -35,6 +35,7 @@ public enum Error {
     SEANCE_NOT_FOUND("Seance not found"),
     SEAT_EXISTS("Seat already exists"),
     SEAT_NOT_FOUND("Seat not found"),
+    SEANCE_IN_PAST("Seance dateTime is before current dateTime"),
 
     TICKET_EXISTS("Ticket already exists"),
     TICKET_NOT_FOUND("Ticket not found"),
