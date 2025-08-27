@@ -32,9 +32,34 @@ public class TicketTypeService {
         ticketTypeRepository.deleteById(id);
     }
 
+    public boolean typeExists(String typeName) {
+
+        List<TicketTypeDto> all = getAllTicketTypes();
+
+        String trimmedName = typeName.trim();
+
+        for (TicketTypeDto dto : all) {
+            if (dto.getName().equalsIgnoreCase(trimmedName)) {
+                return true; // found a match, can stop and return already
+            }
+        }
+
+        return false;
+    }
+
     public void addTicketType(TicketTypeDto dto) {
-        TicketType ticketType = ticketTypeMapper.toEntity(dto);
-        ticketTypeRepository.save(ticketType);
+//        TicketType ticketType = ticketTypeMapper.toEntity(dto);
+//        ticketTypeRepository.save(ticketType);
+
+        if (typeExists(dto.getName())) {
+            //throw new IllegalArgumentException("Ticket type already exists: " + dto.getName());
+            throw new DatabaseNameConflictException("Ticket type already exists"); // modif DatabaseNameConflictException.java in package ee.bcs.cinemaback.infrastructure.exception
+        }
+        else {
+            TicketType ticketType = ticketTypeMapper.toEntity(dto);
+            ticketTypeRepository.save(ticketType);
+        }
+
     }
 
     public void updateTicketType(Integer id, TicketTypeDto dto) {
