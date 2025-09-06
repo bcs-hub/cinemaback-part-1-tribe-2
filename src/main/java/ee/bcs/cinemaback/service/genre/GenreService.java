@@ -7,6 +7,8 @@ import ee.bcs.cinemaback.persistence.genre.Genre;
 import ee.bcs.cinemaback.persistence.genre.GenreRepository;
 import ee.bcs.cinemaback.persistence.movie.MovieRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,10 +24,12 @@ public class GenreService {
     private final GenreMapper genreMapper;
 
 
+
+    @Cacheable(value = "genres")
     public List<GenreDto> getAllGenres() {
         return genreMapper.toDto(genreRepository.findAllAlphabetic());
     }
-
+@CacheEvict(value = "genres", allEntries = true)
     public void addGenre(String genreName) {
 
         validateGenre(genreName);
@@ -35,6 +39,7 @@ public class GenreService {
     }
 
 
+    @CacheEvict(value = "genres", allEntries = true)
     public void deleteGenreBy(Integer id) {
 
         Genre genre = genreRepository.findById(id).orElseThrow(
