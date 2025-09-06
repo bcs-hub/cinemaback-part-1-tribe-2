@@ -13,9 +13,9 @@ import ee.bcs.cinemaback.persistence.ticket.TicketRepository;
 import ee.bcs.cinemaback.service.room.dto.RoomDto;
 import ee.bcs.cinemaback.service.room.dto.RoomSeanceDto;
 import ee.bcs.cinemaback.service.room.dto.SeatDto;
-import jakarta.transaction.Transactional;   // incompatible
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -97,6 +97,7 @@ public class RoomService {
         }
     }
 
+    @Transactional
     public void updateRoom(Integer id, RoomDto roomDto) {
         Room existingRoom = updateName(id, roomDto);
 
