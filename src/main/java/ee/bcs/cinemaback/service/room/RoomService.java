@@ -13,9 +13,10 @@ import ee.bcs.cinemaback.persistence.ticket.TicketRepository;
 import ee.bcs.cinemaback.service.room.dto.RoomDto;
 import ee.bcs.cinemaback.service.room.dto.RoomSeanceDto;
 import ee.bcs.cinemaback.service.room.dto.SeatDto;
-import jakarta.transaction.Transactional;   // incompatible
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 
@@ -97,10 +98,44 @@ public class RoomService {
         }
     }
 
+    @Transactional
     public void updateRoom(Integer id, RoomDto roomDto) {
-        Room existingRoom = updateName(id, roomDto);
+        Room existingRoom = roomRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
 
-        updateSeats(roomDto, existingRoom);
+        // Kas toolide maatriks muutub?
+        boolean seatsChanging =
+                !existingRoom.getRows().equals(roomDto.getRows()) ||
+                        !existingRoom.getCols().equals(roomDto.getCols());
+
+        // Kui muutub, JA on seansse, siis viska erand (enne muudatust)
+        if (seatsChanging && seanceRepository.existsByRoomId(existingRoom.getId())) {
+            throw new DatabaseConstraintException(ROOM_SEATS_CANNOT_BE_EDITED.getMessage());
+        }
+
+        // Nime kontroll ja muutmine
+        validateRoomName(roomDto.getName(), existingRoom.getName());
+        existingRoom.setName(roomDto.getName());
+
+        // Kui toolid muutuvad, siis uuenda need
+        if (seatsChanging) {
+            existingRoom.setRows(roomDto.getRows());
+            existingRoom.setCols(roomDto.getCols());
+
+            existingRoom.getSeats().clear();
+            for (int r = 1; r <= roomDto.getRows(); r++) {
+                for (int c = 1; c <= roomDto.getCols(); c++) {
+                    Seat seat = new Seat();
+                    seat.setRow(r);
+                    seat.setCol(c);
+                    seat.setRoom(existingRoom);
+                    existingRoom.getSeats().add(seat);
+                }
+            }
+        }
+
+        // Lõpus save
+        roomRepository.save(existingRoom);
     }
 
     public RoomDto getRoom(Integer id) {
