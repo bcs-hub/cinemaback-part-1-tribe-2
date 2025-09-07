@@ -97,6 +97,7 @@ public class RoomService {
         }
     }
 
+    @Transactional
     public void updateRoom(Integer id, RoomDto roomDto) {
         Room existingRoom = updateName(id, roomDto);
 
