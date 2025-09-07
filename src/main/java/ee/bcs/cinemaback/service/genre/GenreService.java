@@ -6,6 +6,9 @@ import ee.bcs.cinemaback.infrastructure.exception.ResourceNotFoundException;
 import ee.bcs.cinemaback.persistence.genre.Genre;
 import ee.bcs.cinemaback.persistence.genre.GenreRepository;
 import ee.bcs.cinemaback.persistence.movie.MovieRepository;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,16 +19,19 @@ import static ee.bcs.cinemaback.infrastructure.Error.*;
 
 @Service
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = "genres") // default cache for this service
 public class GenreService {
     private final GenreRepository genreRepository;
     private final MovieRepository movieRepository;
     private final GenreMapper genreMapper;
 
 
+    @Cacheable(key = "'all'")
     public List<GenreDto> getAllGenres() {
         return genreMapper.toDto(genreRepository.findAllAlphabetic());
     }
-
+    @CacheEvict(key = "'all'")
+    // Invalidate cache after create.
     public void addGenre(String genreName) {
 
         validateGenre(genreName);
@@ -34,7 +40,8 @@ public class GenreService {
         genreRepository.save(genre);
     }
 
-
+    @CacheEvict(key = "'all'")
+    // Invalidate cache after delete.
     public void deleteGenreBy(Integer id) {
 
         Genre genre = genreRepository.findById(id).orElseThrow(
@@ -46,7 +53,8 @@ public class GenreService {
 
         genreRepository.delete(genre);
     }
-
+    @CacheEvict(key = "'all'")
+    // Invalidate cache after update.
     public void updateGenreName(Integer id, String newName) {
         Genre genre = genreRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Genre ID not found"));
