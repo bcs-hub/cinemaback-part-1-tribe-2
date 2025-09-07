@@ -13,7 +13,7 @@ import ee.bcs.cinemaback.persistence.ticket.TicketRepository;
 import ee.bcs.cinemaback.service.room.dto.RoomDto;
 import ee.bcs.cinemaback.service.room.dto.RoomSeanceDto;
 import ee.bcs.cinemaback.service.room.dto.SeatDto;
-import jakarta.transaction.Transactional;   // incompatible
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +32,8 @@ public class RoomService {
     private final RoomMapper roomMapper;
 
 
+    @Transactional
+    // Create room and seats atomically
     public void addRoom(RoomDto roomDto) {
 
         try {
@@ -44,6 +46,7 @@ public class RoomService {
             System.out.println(e.getMessage());
         }
     }
+
 
     private void updateSeats(Room room) {
 
@@ -63,7 +66,7 @@ public class RoomService {
             }
         }
     }
-
+    @Transactional
     public void deleteRoom(int roomId) {
 
         if (seanceRepository.existsByRoomId(roomId)) {
@@ -73,6 +76,7 @@ public class RoomService {
         roomRepository.deleteById(roomId);
     }
 
+    @Transactional(readOnly = true)
     public List<RoomDto> getAllRooms() {
         return roomMapper.toRoomDtos(roomRepository.findAllAlphabetic());
     }
@@ -97,17 +101,43 @@ public class RoomService {
         }
     }
 
+    @Transactional
+    // Update name + seats in one transaction. Any error -> rollback all changes.
     public void updateRoom(Integer id, RoomDto roomDto) {
-        Room existingRoom = updateName(id, roomDto);
+        Room existing = roomRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
 
-        updateSeats(roomDto, existingRoom);
+        // detect if seats grid is changing
+        boolean seatsChanged = !(existing.getRows().equals(roomDto.getRows())
+                && existing.getCols().equals(roomDto.getCols()));
+
+        // if seats are changing and room has seances -> block BEFORE any write
+        if (seatsChanged && seanceRepository.existsByRoomId(id)) {
+            throw new DatabaseConstraintException(ROOM_SEATS_CANNOT_BE_EDITED.getMessage());
+        }
+
+        // validate and update name
+        validateRoomName(roomDto.getName(), existing.getName());
+        existing.setName(roomDto.getName());
+
+        // update seats only if grid changed
+        if (seatsChanged) {
+            existing.setRows(roomDto.getRows());
+            existing.setCols(roomDto.getCols());
+            rebuildSeats(existing, existing.getRows(), existing.getCols());
+        }
+
+        // one save if any exception above occurs, whole tx is rolled back
+        roomRepository.save(existing);
     }
 
+    @Transactional(readOnly = true)
     public RoomDto getRoom(Integer id) {
         Room room = roomRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Room not found"));
         return roomMapper.toRoomDto(room);
     }
 
+    @Transactional(readOnly = true)
     public RoomSeanceDto getRoomSeance(Integer seanceId) {
         Seance seance = seanceRepository.findById(seanceId).orElseThrow(
                 () -> new ResourceNotFoundException("Seance not found")
@@ -162,5 +192,18 @@ public class RoomService {
         existingRoom.setName(roomDto.getName());
         roomRepository.save(existingRoom);
         return existingRoom;
+    }
+    private void rebuildSeats(Room room, Integer rows, Integer cols) {
+        // requires: Room.seats mapping with cascade = ALL and orphanRemoval = true
+        room.getSeats().clear();
+        for (int r = 1; r <= rows; r++) {
+            for (int c = 1; c <= cols; c++) {
+                Seat seat = new Seat();
+                seat.setRow(r);
+                seat.setCol(c);
+                seat.setRoom(room);
+                room.getSeats().add(seat);
+            }
+        }
     }
 }
