@@ -7,6 +7,8 @@ import ee.bcs.cinemaback.persistence.genre.Genre;
 import ee.bcs.cinemaback.persistence.genre.GenreRepository;
 import ee.bcs.cinemaback.persistence.movie.MovieRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,12 +24,13 @@ public class GenreService {
     private final GenreMapper genreMapper;
 
 
+    @Cacheable("genres")
     public List<GenreDto> getAllGenres() {
         return genreMapper.toDto(genreRepository.findAllAlphabetic());
     }
 
+    @CacheEvict(value = "genres", allEntries = true, beforeInvocation = true)
     public void addGenre(String genreName) {
-
         validateGenre(genreName);
         Genre genre = new Genre();
         genre.setName(genreName);
@@ -35,6 +38,7 @@ public class GenreService {
     }
 
 
+    @CacheEvict(value = "genres", allEntries = true, beforeInvocation = true)
     public void deleteGenreBy(Integer id) {
 
         Genre genre = genreRepository.findById(id).orElseThrow(
@@ -47,6 +51,7 @@ public class GenreService {
         genreRepository.delete(genre);
     }
 
+    @CacheEvict(value = "genres", allEntries = true, beforeInvocation = true)
     public void updateGenreName(Integer id, String newName) {
         Genre genre = genreRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Genre ID not found"));

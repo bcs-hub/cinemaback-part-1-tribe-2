@@ -37,3 +37,7 @@ This repository contains the backend for the Future cinema application which inc
 Development: Install JDK 17 and Your favourite IDE (IntelliJ IDEA, VSCode, Eclipse, etc.)
 Your IDE should detect the project as a Gradle project and automatically download the dependencies.
 Build: `gradle build`
+
+
+## Admin user
+Admin username and password defined in application.properties file.
